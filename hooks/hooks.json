@@ -1,0 +1,19 @@
+{
+  "description": "asana-task guard: active only while a task brief exists for the current repo and branch",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard.js"], "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "mcp__.*add_comment",
+        "hooks": [
+          { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard.js"], "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}
