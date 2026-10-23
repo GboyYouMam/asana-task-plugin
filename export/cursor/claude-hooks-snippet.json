@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "<path to asana-task-plugin>/hooks/guard.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
