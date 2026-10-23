@@ -1,0 +1,14 @@
+{
+  "name": "asana-task-plugin",
+  "owner": {
+    "name": "GboyYouMam"
+  },
+  "plugins": [
+    {
+      "name": "asana-task",
+      "source": "./",
+      "description": "Asana link in, reviewed and QA'd PR out"
+    }
+  ],
+  "description": "Asana-driven task pipeline for Claude Code: link in, reviewed and QA'd PR out"
+}

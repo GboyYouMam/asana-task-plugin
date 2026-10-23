@@ -1,0 +1,20 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+      - run: npm run check:denylist
+        env:
+          ASANA_TASK_DENYLIST: ${{ secrets.ASANA_TASK_DENYLIST_PATH }}
+      - run: npm run build:export && git diff --exit-code export/
+        if: hashFiles('scripts/build-export.js') != ''
+      - run: npx --yes @anthropic-ai/claude-code plugin validate . --strict
+        continue-on-error: true

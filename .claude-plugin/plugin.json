@@ -1,0 +1,19 @@
+{
+  "name": "asana-task",
+  "version": "0.1.0",
+  "description": "Asana link in, reviewed and QA'd PR out: a guarded task pipeline for Claude Code",
+  "author": {
+    "name": "GboyYouMam"
+  },
+  "license": "MIT",
+  "keywords": [
+    "asana",
+    "workflow",
+    "pipeline",
+    "git"
+  ],
+  "dependencies": [
+    "superpowers@claude-plugins-official"
+  ],
+  "icon": "./assets/icon.svg"
+}
