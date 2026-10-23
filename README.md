@@ -100,6 +100,8 @@ node "<plugin root>/bin/asana-task-profile.js" import path/to/notes.md
 - Asana access is only through the user's own connector.
 - Windows is the first-class target; macOS and Linux should work but are less exercised.
 - The guard is scoped to active tasks by design: outside the pipeline it does nothing, so it cannot protect work you do without it.
+- Whether a skill can reliably invoke another plugin's skill (`superpowers:*`, `ponytail`) from inside its own text is not documented by Claude Code; the fallback rules exist for exactly that case.
+- If you also keep a personal skill named `asana-task` in `~/.claude/skills`, both will match an Asana link. Keep one.
 
 ## Development
 

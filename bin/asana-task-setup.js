@@ -2,6 +2,7 @@
 // First-run setup: detect tools, report blockers, write the machine config.
 // Idempotent: with an existing config it only prints it.
 import path from "node:path";
+import { dataDir } from "../lib/data-dir.js";
 import { loadConfig, saveConfig, configPath } from "../lib/config.js";
 import { detectTools } from "../lib/detect.js";
 
@@ -30,7 +31,7 @@ if (blockers.length > 0) {
 }
 
 const config = {
-  worktreeRoot: path.join(process.cwd(), "..", ".worktrees"),
+  worktreeRoot: path.join(dataDir(), "worktrees"),
   worktreeBackend: tools.orca ? "orca" : "git",
   workerBackend: "claude",
   devPortStart: 8082,
