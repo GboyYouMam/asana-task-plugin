@@ -74,3 +74,8 @@ test("warns on npm ci --no-package-lock and repo-wide formatters", () => {
     assert.equal(evaluate(cmd(c), active).kind, "warn", c);
   }
 });
+
+test("PowerShell tool commands are guarded like Bash", () => {
+  const d = evaluate({ tool_name: "PowerShell", tool_input: { command: "git add ." }, cwd: "/r" }, active);
+  assert.equal(d.kind, "block");
+});

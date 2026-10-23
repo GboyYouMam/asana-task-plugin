@@ -5,10 +5,10 @@ A profile is what the plugin knows about one repository, for you. It is yours: i
 ## Where it lives
 
 ```
-$CLAUDE_PLUGIN_DATA/profiles/<host>__<owner>__<name>.md
+~/.claude/asana-task-data/profiles/<host>__<owner>__<name>.md
 ```
 
-On CLIs without `CLAUDE_PLUGIN_DATA` the root is `~/.claude/asana-task-data`. A repository without an `origin` remote is keyed `local__<folder name>`. To see the path for the repository you are in:
+The root can be overridden with `ASANA_TASK_DATA`. A repository without an `origin` remote is keyed `local__<folder name>`. To see the path for the repository you are in:
 
 ```
 node "<plugin root>/bin/asana-task-profile.js" show

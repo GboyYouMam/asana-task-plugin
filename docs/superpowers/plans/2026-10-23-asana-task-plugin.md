@@ -14,7 +14,7 @@
 
 - Plugin name `asana-task`; skill invoked as `/asana-task:asana-task`. Name must not start with `claude-`, `anthropic-`, `cc-plugin-`.
 - No runtime npm dependencies. Scripts are Node, never bash or python, and must run on Windows (CRLF-safe reads, `path.join`, no `$HOME` assumptions).
-- State root = `process.env.CLAUDE_PLUGIN_DATA`, fallback `path.join(os.homedir(), ".claude", "asana-task-data")`. Never write under `CLAUDE_PLUGIN_ROOT`.
+- State root = `path.join(os.homedir(), ".claude", "asana-task-data")`, override `ASANA_TASK_DATA` (Task 9 ruling: `CLAUDE_PLUGIN_DATA` is absent from shell-command environments). Never write under `CLAUDE_PLUGIN_ROOT`.
 - Hook rules fire only when a brief exists at `<data>/briefs/<repo-key>/<branch>.md`. Outside that: exit 0, no output.
 - Hook block = exit code 2 with the reason on stderr. Ask = JSON `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"..."}}` on stdout, exit 0. Warn = JSON with `additionalContext`, exit 0.
 - `repo-key` = `host/owner/name` from the `origin` remote URL, lowercase, `.git` stripped, path separators replaced by `__` when used as a directory name.

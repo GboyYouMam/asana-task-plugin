@@ -6,7 +6,7 @@ A profile is the plugin's memory about one repository, for one user. It lives ou
 <data>/profiles/<host>__<owner>__<name>.md      e.g. github.com__acme__example-app.md
 ```
 
-`<data>` is `$CLAUDE_PLUGIN_DATA`, or `~/.claude/asana-task-data` on older CLIs. A repository without an `origin` remote is keyed `local__<dirname>`.
+`<data>` is `~/.claude/asana-task-data` (override with `ASANA_TASK_DATA`). A repository without an `origin` remote is keyed `local__<dirname>`.
 
 It is never committed to the repository it describes. Colleagues each grow their own.
 

@@ -21,7 +21,7 @@ function initRepo(dir) {
 }
 
 beforeEach(() => {
-  process.env.CLAUDE_PLUGIN_DATA = tmpDir();
+  process.env.ASANA_TASK_DATA = tmpDir();
 });
 
 test("repoKeyFromUrl handles ssh and https origins", () => {

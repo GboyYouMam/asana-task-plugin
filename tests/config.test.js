@@ -12,12 +12,12 @@ function tmp(name) {
 }
 
 beforeEach(() => {
-  delete process.env.CLAUDE_PLUGIN_DATA;
+  delete process.env.ASANA_TASK_DATA;
 });
 
-test("dataDir uses CLAUDE_PLUGIN_DATA when set, even with spaces", () => {
-  process.env.CLAUDE_PLUGIN_DATA = path.join(os.tmpdir(), "a b", "data");
-  assert.equal(dataDir(), process.env.CLAUDE_PLUGIN_DATA);
+test("dataDir uses ASANA_TASK_DATA when set, even with spaces", () => {
+  process.env.ASANA_TASK_DATA = path.join(os.tmpdir(), "a b", "data");
+  assert.equal(dataDir(), process.env.ASANA_TASK_DATA);
 });
 
 test("dataDir falls back to ~/.claude/asana-task-data", () => {
@@ -25,7 +25,7 @@ test("dataDir falls back to ~/.claude/asana-task-data", () => {
 });
 
 test("saveConfig then loadConfig round-trips and creates the directory", () => {
-  process.env.CLAUDE_PLUGIN_DATA = tmp("with space/data");
+  process.env.ASANA_TASK_DATA = tmp("with space/data");
   const config = {
     worktreeRoot: "C:/w t/.worktrees",
     worktreeBackend: "git",
@@ -34,11 +34,11 @@ test("saveConfig then loadConfig round-trips and creates the directory", () => {
     repos: { "github.com/owner/example-app": { devPort: 8090 } },
   };
   saveConfig(config);
-  assert.ok(fs.existsSync(path.join(process.env.CLAUDE_PLUGIN_DATA, "config.json")));
+  assert.ok(fs.existsSync(path.join(process.env.ASANA_TASK_DATA, "config.json")));
   assert.deepEqual(loadConfig(), config);
 });
 
 test("loadConfig returns null when no config.json", () => {
-  process.env.CLAUDE_PLUGIN_DATA = tmp("empty");
+  process.env.ASANA_TASK_DATA = tmp("empty");
   assert.equal(loadConfig(), null);
 });

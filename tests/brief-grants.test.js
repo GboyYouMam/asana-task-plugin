@@ -27,7 +27,7 @@ function initRepo() {
 }
 
 beforeEach(() => {
-  process.env.CLAUDE_PLUGIN_DATA = tmpDir();
+  process.env.ASANA_TASK_DATA = tmpDir();
 });
 
 test("createBrief writes the skeleton and hasBrief becomes true", () => {
