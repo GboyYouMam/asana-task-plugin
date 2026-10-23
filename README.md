@@ -50,6 +50,12 @@ Working tickets with an agent fails in the same four ways, over and over. Each o
 
 **Hooks.** One Node script on `PreToolUse`. It is inert unless a brief exists for the current repository and branch, which only the pipeline creates. While active it blocks `git add .`/`-A`, blocks `git push` without a grant, always blocks force-push and `--no-verify`, asks before `gh pr create`/`comment` and before an Asana comment, and warns on commits that carry `[DBG` lines, a lockfile or a forbidden path.
 
+## Built for Orca, usable without it
+
+This plugin was designed around [Orca](https://orca.dev): a workspace where each task gets its own worktree and where several agents can be mixed in one flow. There the plugin is the pipeline and Orca is the stage: the plugin creates the worktree through Orca, a Codex worker can implement the brief, Claude reviews and runs QA, and the Orca card carries the task status. The Orca-specific commands and traps live in one place, `skills/asana-task/references/backends.md`, under the `orca` section.
+
+Outside Orca the same pipeline runs with plain `git worktree` and Claude doing all the work (set at first run by `asana-task-setup.js`), and Codex users can load the exported skill folder. Those paths are exercised less than the Orca one; treat them as supported but younger.
+
 ## An illustrative flow
 
 Invented on purpose; no real task, repository or client appears in this repository.
