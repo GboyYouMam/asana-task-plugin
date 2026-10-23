@@ -65,6 +65,15 @@ test("staleTraps returns traps older than 60 days", () => {
   assert.deepEqual(stale.map((t) => t.text), ["old"]);
 });
 
+test("undated Traps lines and text before the first heading survive a round-trip", () => {
+  const md = "notes preamble\n\n## Traps\n- dated (verified: 2026-01-01)\n- undated trap\nsome prose\n";
+  const out = serializeProfile(parseProfile(md));
+  assert.ok(out.startsWith("notes preamble\n"), out);
+  assert.ok(out.includes("- dated (verified: 2026-01-01)"));
+  assert.ok(out.includes("- undated trap"));
+  assert.ok(out.includes("some prose"));
+});
+
 test("draftProfile fills Commands from package.json scripts and Repo from branches", () => {
   const dir = tmpDir();
   initRepo(dir);

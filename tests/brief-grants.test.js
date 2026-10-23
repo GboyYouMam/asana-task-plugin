@@ -70,6 +70,19 @@ test("asana-task-brief create refuses on detached HEAD", () => {
   assert.match(r.stderr, /refusing: detached HEAD/);
 });
 
+test("asana-task-brief create accepts --branch and refuses the profile default base", async () => {
+  const dir = initRepo();
+  const r1 = spawnSync("node", [BIN, "create", "--title", "T", "--ticket", "u", "--branch", "fix/later"], { cwd: dir, encoding: "utf8", env: process.env });
+  assert.equal(r1.status, 0, r1.stderr);
+  assert.ok(r1.stdout.includes("fix__later.md"), r1.stdout);
+  const { saveProfile, parseProfile } = await import("../lib/profile.js");
+  const { repoKey } = await import("../lib/repo-key.js");
+  saveProfile(repoKey(dir), parseProfile("## Repo\ndefault base: main\n"));
+  const r2 = spawnSync("node", [BIN, "create", "--title", "T", "--ticket", "u"], { cwd: dir, encoding: "utf8", env: process.env });
+  assert.equal(r2.status, 1);
+  assert.match(r2.stderr, /refusing: main is the default base/);
+});
+
 test("grantPush then consumePush is true once, then false", () => {
   grantPush("github.com/o/r", "fix/task");
   assert.equal(consumePush("github.com/o/r", "fix/task"), true);

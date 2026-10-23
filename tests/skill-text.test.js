@@ -34,10 +34,13 @@ test("skill text carries no machine paths or tool UUIDs", () => {
   }
 });
 
-test("every hooks-only line mentions the hook", () => {
+test("every hooks-only span is closed and mentions the guard or hook", () => {
   const lines = fs.readFileSync(SKILL, "utf8").split("\n").filter((l) => l.includes("<!-- hooks-only -->"));
   assert.ok(lines.length >= 3, "at least three hooks-only lines");
-  for (const l of lines) assert.match(l, /hook/i, l);
+  for (const l of lines) {
+    assert.ok(l.includes("<!-- /hooks-only -->"), `unclosed span: ${l}`);
+    assert.match(l.slice(l.indexOf("<!-- hooks-only -->")), /guard|hook/i, l);
+  }
 });
 
 test("references exist: profile-schema, fallback-rules, backends", () => {

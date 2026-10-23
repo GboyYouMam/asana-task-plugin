@@ -9,6 +9,7 @@ One Asana link in → a reviewed, QA'd commit and PR out (one per repo and base 
 
 Everything repo-specific comes from the **profile** (`references/profile-schema.md`), a per-user file the plugin keeps outside the repository. Everything machine-specific comes from the plugin config written by `asana-task-setup.js`. This skill itself knows no repository.
 
+Scripts live in the plugin: run them as `node "${CLAUDE_PLUGIN_ROOT}/bin/<script>"` from the repository root. The task's working state is a **brief**, a file keyed to the repo and the task branch.
 
 ## Phase 0 — Read the task and route it
 
@@ -30,13 +31,14 @@ REQUIRED SUB-SKILL: `superpowers:systematic-debugging` for bugs. If unavailable,
 - Trace the real flow end to end (entry point → service → storage → consumer). Grep every caller of what you will change.
 - When the symptom is "data shows X here and Y there", find both producers and compare their definitions before touching either.
 - If the ticket only has "Expected result", that IS the acceptance criteria. Say so.
+- Temporary instrumentation is allowed; tag every line `[DBG` so it is greppable. It must be gone before commit.
 - A fix that rests on a production fact you cannot verify locally is reported as a hypothesis with the exact query that confirms it.
 
 ## Phase 2 — Plan
 
 REQUIRED SUB-SKILL: `ponytail` (laziest correct solution). If unavailable, apply `references/fallback-rules.md` §2.
 
-Create the brief: `asana-task-brief.js create --title "<title>" --ticket "<permalink>"`, then fill its sections:
+Draft the plan now; it becomes the brief once the task branch exists in Phase 3. It contains:
 - Acceptance criteria, numbered, nothing beyond the expected result.
 - Exact files/lines to change; files that must NOT change and why (the callers found in Phase 1).
 - Existing tests that will break and how to adjust them.
@@ -52,6 +54,7 @@ Read `references/backends.md` and use the worktree backend and worker backend fr
 - Branch naming is mandatory: `fix/<slug>` or `feat/<slug>`, never a `<user>/...` prefix. Rename with `git branch -m` before committing if needed.
 - Check the branch really sits on the base (`git merge-base --is-ancestor origin/<base> HEAD`); if stale and without own commits, `git reset --hard origin/<base>` and reinstall dependencies.
 - Never work on a detached HEAD or directly on the base branch.
+- **Create the brief as soon as the task branch exists**, from inside the worktree: `asana-task-brief.js create --title "<title>" --ticket "<permalink>"` (or `--branch fix/<slug>` when run from elsewhere). The script refuses the profile's default base on purpose: a brief belongs to the task branch only. Then fill its sections with the Phase 2 plan.
 - Probe the profile's `Commands` once (`--version`/`--help`); a command that does not exist is reported, not run blindly.
 
 ## Phase 4 — Review
@@ -79,8 +82,11 @@ Dispatch the `asana-task:qa` agent with: the acceptance criteria, how to reach t
 REQUIRED SUB-SKILL: `superpowers:verification-before-completion`. If unavailable, apply `references/fallback-rules.md` §4.
 
 - Conventional Commit: `fix(<scope>): <present tense>` + bullets + the `Co-Authored-By` line the session's attribution reminder gives. If the user dictates a title, use it verbatim.
+- `git add` **explicit paths only**, never `git add .`, `-A` or `-u`.
 - Report to the user: branch, commit, what changed, review findings and what you did with them, QA verdicts, out-of-scope observations, and the production steps the code alone does not cover (backfills, cache/flag resets, cherry-picks, follow-ups).
+- **Do not push until the user says so.** Never force-push; never `--no-verify` unless the pre-push hook printed success and the push itself still failed.
 - Push with keep-alive when the pre-push suite is long: `git -c core.sshCommand="ssh -o ServerAliveInterval=20 -o ServerAliveCountMax=60" push -u origin <branch>`; confirm with `git ls-remote --heads origin <branch>`.
+- PR: `gh pr create --base <base> --head <branch> --title "<commit title>" --body "<ticket permalink>"`. Body = ticket link only (plus the session's attribution footer if one is given). Open the PR and post comments only when the user asked.
 - One PR per (repo, base branch). A shared fix that must land on both the default base and a client branch is two PRs, or one PR plus a cherry-pick after merge: the profile's `Repo` section says which.
 - Never rewrite pushed history without an explicit request.
 
@@ -89,6 +95,7 @@ REQUIRED SUB-SKILL: `superpowers:verification-before-completion`. If unavailable
 - `asana-task-brief.js status "<one line>"`: rewrite, don't append. A fresh session must read one truth.
 - Repo knowledge learned in this task (a trap, a corrected command, a branch fact) goes into the profile now: read it with `show`, edit, write it back with `write`, with today's date on new traps. List every profile change in the final report so the user can veto.
 - Cross-repo, personal lessons go to your memory, not the profile.
+- When the task is fully delivered (PR merged or user says done), `asana-task-brief.js remove`.
 
 ## Asana comments
 

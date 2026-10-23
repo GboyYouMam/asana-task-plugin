@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { evaluate } from "../lib/guard-rules.js";
 
 const base = { tool_name: "Bash", cwd: "/r" };
-const active = { active: true, grant: () => false, forbidden: [], stagedPaths: () => [], stagedDiff: () => "" };
+const active = { active: true, branch: "fix/x", hasGrant: () => false, forbidden: [], stagedPaths: () => [], stagedDiff: () => "" };
+const granted = { ...active, hasGrant: () => true };
 const cmd = (command) => ({ ...base, tool_input: { command } });
 
 test("inactive pipeline allows everything", () => {
@@ -11,8 +12,14 @@ test("inactive pipeline allows everything", () => {
   assert.equal(evaluate(cmd("git push --force"), { ...active, active: false }).kind, "allow");
 });
 
-test("blocks git add . / -A / --all, also with -C", () => {
+test("blocks git add . / -A / --all, also with -C and after cd", () => {
   for (const c of ["git add .", "git add -A", "git add --all", "git -C x add .", "cd y && git add ."]) {
+    assert.equal(evaluate(cmd(c), active).kind, "block", c);
+  }
+});
+
+test("blocks the other stage-everything spellings", () => {
+  for (const c of ["git add ./", "git add *", "git add -u", "git add --update", "git add :/"]) {
     assert.equal(evaluate(cmd(c), active).kind, "block", c);
   }
 });
@@ -23,26 +30,55 @@ test("allows git add with explicit paths", () => {
 
 test("does not block git add . inside a quoted string", () => {
   assert.equal(evaluate(cmd('echo "git add ."'), active).kind, "allow");
+  assert.equal(evaluate(cmd('git commit -m "never run git add . here"'), active).kind, "allow");
+});
+
+test("PowerShell call shapes and git.exe are still recognised", () => {
+  const shapes = [
+    "& git add .",
+    "git.exe add .",
+    "Write-Output (git add .)",
+    "if ($?) { git add . }",
+    "$(git add .)",
+    'cmd /c "git add ."',
+    'git add .; "EXIT CODE: $LASTEXITCODE"',
+  ];
+  for (const c of shapes) assert.equal(evaluate(cmd(c), active).kind, "block", c);
 });
 
 test("blocks git push without grant", () => {
-  const d = evaluate(cmd("git push -u origin x"), active);
+  const d = evaluate(cmd("git push -u origin fix/x"), active);
   assert.equal(d.kind, "block");
   assert.match(d.reason, /ask the user/i);
 });
 
-test("allows git push with a grant and consumes it once", () => {
-  let used = 0;
-  const g = { ...active, grant: () => { used++; return true; } };
-  assert.equal(evaluate(cmd("git push -u origin x"), g).kind, "allow");
-  assert.equal(used, 1);
+test("allows git push with a grant and reports that the grant is needed", () => {
+  const d = evaluate(cmd("git push -u origin fix/x"), granted);
+  assert.equal(d.kind, "allow");
+  assert.equal(d.needsGrant, true);
+  assert.equal(evaluate(cmd("git status"), granted).needsGrant, undefined);
+});
+
+test("a blocked segment after a push keeps the whole command blocked", () => {
+  assert.equal(evaluate(cmd("git push origin fix/x; git push --force"), granted).kind, "block");
+});
+
+test("push to another branch than the granted one is blocked", () => {
+  assert.equal(evaluate(cmd("git push origin other"), granted).kind, "block");
+  assert.equal(evaluate(cmd("git push origin fix/x:fix/x"), granted).kind, "allow");
+  assert.equal(evaluate(cmd("git push origin HEAD"), granted).kind, "allow");
+  assert.equal(evaluate(cmd("git push"), granted).kind, "allow");
+  assert.equal(evaluate(cmd("git push -u origin fix/x"), granted).kind, "allow");
 });
 
 test("always blocks force push and --no-verify even with a grant", () => {
-  const g = { ...active, grant: () => true };
-  for (const c of ["git push --force", "git push -f", "git push --force-with-lease", "git push origin +main", "git push --no-verify", "git push -n"]) {
-    assert.equal(evaluate(cmd(c), g).kind, "block", c);
+  for (const c of ["git push --force", "git push -f", "git push --force-with-lease", "git push origin +main", "git push --no-verify"]) {
+    assert.equal(evaluate(cmd(c), granted).kind, "block", c);
   }
+});
+
+test("git push -n is a dry run and is allowed with a grant", () => {
+  assert.equal(evaluate(cmd("git push -n origin fix/x"), granted).kind, "allow");
 });
 
 test("asks on gh pr create / gh pr comment", () => {

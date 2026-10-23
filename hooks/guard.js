@@ -6,7 +6,7 @@ import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 import { repoKey } from "../lib/repo-key.js";
 import { currentBranch, hasBrief } from "../lib/brief.js";
-import { consumePush } from "../lib/grants.js";
+import { hasGrant, consumePush } from "../lib/grants.js";
 import { loadProfile } from "../lib/profile.js";
 import { evaluate } from "../lib/guard-rules.js";
 
@@ -32,11 +32,15 @@ function main() {
 
   const decision = evaluate(input, {
     active,
-    grant: () => consumePush(key, branch),
+    branch,
+    hasGrant: () => hasGrant(key, branch),
     forbidden,
     stagedPaths: () => git(cwd, ["diff", "--cached", "--name-only"]).split(/\r?\n/).filter(Boolean),
     stagedDiff: () => git(cwd, ["diff", "--cached"]),
   });
+
+  // The grant is spent only when the whole command is allowed and contains a push.
+  if (decision.kind === "allow" && decision.needsGrant) consumePush(key, branch);
 
   switch (decision.kind) {
     case "block":

@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const MARKER = "<!-- hooks-only -->";
+const SPAN_RE = /\s*<!-- hooks-only -->[\s\S]*?<!-- \/hooks-only -->/g;
 
 function copyTree(from, to, onFile) {
   fs.mkdirSync(to, { recursive: true });
@@ -27,10 +28,19 @@ export function buildExport(skillDir, outDir) {
   copyTree(skillDir, codexSkill, (src, dst) => {
     let text = fs.readFileSync(src, "utf8");
     if (src.endsWith(".md")) {
+      // Inline spans `<!-- hooks-only -->…<!-- /hooks-only -->` lose only the span; a line carrying
+      // the bare marker and no closing tag is hook-only as a whole and is dropped.
       const kept = [];
       for (const line of text.split("\n")) {
-        if (line.includes(MARKER)) strippedLines++;
-        else kept.push(line);
+        if (SPAN_RE.test(line)) {
+          strippedLines++;
+          kept.push(line.replace(SPAN_RE, ""));
+        } else if (line.includes(MARKER)) {
+          strippedLines++;
+        } else {
+          kept.push(line);
+        }
+        SPAN_RE.lastIndex = 0;
       }
       text = kept.join("\n");
     }

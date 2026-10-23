@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Brief CLI: create --title <t> --ticket <url> | path | status "<line>" | remove
-// A brief marks the pipeline as active for the current repo and branch; the guard hook keys on it.
+// Brief CLI: create --title <t> --ticket <url> [--branch <b>] | path [--branch <b>] | status "<line>" | remove [--branch <b>]
+// A brief marks the pipeline as active for a repo and branch; the guard hook keys on it.
+// It belongs to the task branch, never to the default base: create it once that branch exists.
 import { repoKey } from "../lib/repo-key.js";
 import { currentBranch, briefPath, createBrief, setBriefStatus, removeBrief, hasBrief } from "../lib/brief.js";
+import { loadProfile, defaultBase } from "../lib/profile.js";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -14,9 +16,9 @@ function flag(name) {
 
 const cwd = process.cwd();
 const key = repoKey(cwd);
-const branch = currentBranch(cwd);
+const branch = flag("--branch") ?? currentBranch(cwd);
 if (!branch) {
-  console.error("refusing: detached HEAD (check out a branch first)");
+  console.error("refusing: detached HEAD (check out a branch first, or pass --branch)");
   process.exit(1);
 }
 
@@ -25,8 +27,17 @@ switch (command) {
     const title = flag("--title");
     const ticketUrl = flag("--ticket");
     if (!title || !ticketUrl) {
-      console.error("usage: asana-task-brief.js create --title <title> --ticket <url>");
+      console.error("usage: asana-task-brief.js create --title <title> --ticket <url> [--branch <branch>]");
       process.exit(2);
+    }
+    const base = defaultBase(loadProfile(key));
+    if (base && branch === base) {
+      console.error(`refusing: ${base} is the default base; create the task branch first or pass --branch fix/<slug>`);
+      process.exit(1);
+    }
+    if (hasBrief(key, branch)) {
+      console.error(`refusing: a brief already exists for ${key} ${branch} (use status/remove)`);
+      process.exit(1);
     }
     console.log(createBrief(key, branch, { title, ticketUrl }));
     break;
@@ -48,6 +59,6 @@ switch (command) {
     console.log(`brief removed for ${key} ${branch}`);
     break;
   default:
-    console.error('usage: asana-task-brief.js create --title <t> --ticket <url> | path | status "<line>" | remove');
+    console.error('usage: asana-task-brief.js create --title <t> --ticket <url> [--branch <b>] | path | status "<line>" | remove');
     process.exit(2);
 }
